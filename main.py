@@ -1,4 +1,7 @@
 # coding=utf-8
+
+
+import cv2
 import csv
 import os
 import re
@@ -6,11 +9,10 @@ import sys
 import json
 import base64
 
+
 # 保证兼容python2以及python3
 import time
 from typing import List
-
-import cv2
 
 IS_PY3 = sys.version_info.major == 3
 if IS_PY3:
@@ -136,15 +138,10 @@ if __name__ == '__main__':
 
     text = ""
 
-    # 压缩图像
-    img = cv2.imread("./img/a.jpg", 1)
-    cv2.imwrite("./imgzip/a1.jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 50])
-
     # 读取书籍页面图片
     count = 0
     path = './img'
     file_list: List = os.listdir(path)
-    print(file_list)
     time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     row1 = [str(time)]
     row2 = ['姓名', '性别', '年龄', '身份证号', '联系电话']
@@ -182,3 +179,5 @@ if __name__ == '__main__':
         out = open("./result.csv", "a", newline="")
         csv_writer = csv.writer(out, dialect="excel")
         csv_writer.writerow(row)
+        # print(text)
+        # text = ""

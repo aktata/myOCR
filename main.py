@@ -9,7 +9,6 @@ import sys
 import json
 import base64
 
-
 # 保证兼容python2以及python3
 import time
 from typing import List
@@ -121,11 +120,24 @@ def match_text(txt, txt_start, txt_end, num, flag):
     if flag == 1:
         id_start = re.search(txt_start, txt).span()[1]
         id_end = re.search(txt_end, txt).span()[0]
-        name = txt[id_start:id_end]
-    else:
+        isname = txt[id_start:id_end]
+    elif flag == 0:
         id_start = re.search(txt_start, txt).span()[1]
-        name = txt[id_start:id_start+num]
-    return name
+        isname = txt[id_start:id_start + num]
+    else:
+        print('ERROR:flag')
+    return isname
+
+
+"""
+     创建文件夹
+"""
+
+
+def mkdir(mkpath):
+    folder = os.path.exists(mkpath)
+    if not folder:
+        os.makedirs(mkpath)
 
 
 if __name__ == '__main__':
@@ -140,20 +152,23 @@ if __name__ == '__main__':
 
     # 读取书籍页面图片
     count = 0
-    path = './img'
+    path = './img/'
+    zip_path = './img_zip/'
     file_list: List = os.listdir(path)
     time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     row1 = [str(time)]
-    row2 = ['姓名', '性别', '年龄', '身份证号', '联系电话']
+    row2 = ['姓名', '性别', '年龄', '身份证号', '联系电话', '科别', '申请医生']
     out = open("./result.csv", "a", newline="")
     csv_writer = csv.writer(out, dialect="excel")
     csv_writer.writerow(row1)
     csv_writer.writerow(row2)
     file_num = len([lists for lists in os.listdir(path) if os.path.isfile(os.path.join(path, lists))])
-    print('共'+str(file_num)+'幅图像，正在识别：')
+    mkdir(zip_path)
+    print('共' + str(file_num) + '幅图像，正在识别：')
     while count < file_num:
-        file_path = './img/'+file_list[count]
-        filezip_path = './imgzip/'+file_list[count]
+        file_path = path + file_list[count]
+        filezip_path = zip_path + file_list[count]
+        print(filezip_path)
         print(file_list[count])
         count += 1
 
@@ -173,12 +188,15 @@ if __name__ == '__main__':
         name = match_text(txt=text, txt_start='姓名:', txt_end='性别', num=0, flag=1)
         gender = match_text(txt=text, txt_start='性别:', txt_end='', num=1, flag=0)
         age = match_text(txt=text, txt_start='年龄:', txt_end='岁身份证号', num=0, flag=1)
-        idnum = '\''+match_text(txt=text, txt_start='身份证号', txt_end='', num=18, flag=0)
-        tel = match_text(txt=text, txt_start='联系电话', txt_end='', num=11, flag=0)
+        idnum = match_text(txt=text, txt_start='身份证号', txt_end='', num=18, flag=0) + '\t'
+        tel = match_text(txt=text, txt_start='联系电话', txt_end='', num=11, flag=0) + '\t'
+        unit = match_text(txt=text, txt_start='科别:', txt_end='(申请单号|姓名)', num=0, flag=1)
+        dr = match_text(txt=text, txt_start='申请医生:', txt_end='申请时间', num=0, flag=1)
+        # print(text)
         text = ""
-        row = [name, gender, age, idnum, tel]
+        # 写入csv文件
+        row = [name, gender, age, idnum, tel, unit, dr]
         out = open("./result.csv", "a", newline="")
         csv_writer = csv.writer(out, dialect="excel")
         csv_writer.writerow(row)
-        # print(text)
-        # text = ""
+    os.rmdir(zip_path)

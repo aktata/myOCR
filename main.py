@@ -164,6 +164,7 @@ if __name__ == '__main__':
         # 调用文字识别服务
         file_content = read_file(filezip_path)
         result = request(image_url, urlencode({'image': base64.b64encode(file_content)}))
+        os.remove(filezip_path)
 
         # 解析返回结果
         result_json = json.loads(result)

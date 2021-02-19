@@ -168,7 +168,6 @@ if __name__ == '__main__':
     while count < file_num:
         file_path = path + file_list[count]
         filezip_path = zip_path + file_list[count]
-        print(filezip_path)
         print(file_list[count])
         count += 1
 

@@ -9,6 +9,7 @@ import sys
 import json
 import base64
 
+
 # 保证兼容python2以及python3
 import time
 from typing import List
@@ -116,11 +117,26 @@ def request(url, data):
 """
 
 
-def match_text(txt, txt_start, txt_end, num, flag):
+def match_text(txt, txt_start, txt_end_1, txt_end_2, num, flag):
     if flag == 1:
         id_start = re.search(txt_start, txt).span()[1]
-        id_end = re.search(txt_end, txt).span()[0]
+        # print(txt_start + ':' + str(id_start))
+        id_end_1 = re.search(txt_end_1, txt).span()[0]
+        # print(txt_end_1 + ':' + str(id_end_1))
+        id_end_2 = re.search(txt_end_2, txt).span()[0]
+        # print(txt_end_2 + ':' + str(id_end_2))
+        if id_start < id_end_1 < id_end_2:
+            id_end = id_end_1
+        elif id_start < id_end_2 < id_end_1:
+            id_end = id_end_2
+        elif id_end_1 < id_start < id_end_2:
+            id_end = id_end_2
+        elif id_end_2 < id_start < id_end_1:
+            id_end = id_end_1
+        else:
+            print('ERROR:txt')
         isname = txt[id_start:id_end]
+        # print(id_end)
     elif flag == 0:
         id_start = re.search(txt_start, txt).span()[1]
         isname = txt[id_start:id_start + num]
@@ -168,7 +184,7 @@ if __name__ == '__main__':
     while count < file_num:
         file_path = path + file_list[count]
         filezip_path = zip_path + file_list[count]
-        print(file_list[count])
+        print('正在识别第' + str(count+1) + '/' + str(file_num+1) + '张图像' + file_list[count])
         count += 1
 
         # 压缩图像
@@ -182,20 +198,23 @@ if __name__ == '__main__':
 
         # 解析返回结果
         result_json = json.loads(result)
+        # print(result_json)
         for words_result in result_json["words_result"]:
             text = text + words_result["words"]
-        name = match_text(txt=text, txt_start='姓名:', txt_end='性别', num=0, flag=1)
-        gender = match_text(txt=text, txt_start='性别:', txt_end='', num=1, flag=0)
-        age = match_text(txt=text, txt_start='年龄:', txt_end='岁身份证号', num=0, flag=1)
-        idnum = match_text(txt=text, txt_start='身份证号', txt_end='', num=18, flag=0) + '\t'
-        tel = match_text(txt=text, txt_start='联系电话', txt_end='', num=11, flag=0) + '\t'
-        unit = match_text(txt=text, txt_start='科别:', txt_end='(申请单号|姓名)', num=0, flag=1)
-        dr = match_text(txt=text, txt_start='申请医生:', txt_end='申请时间', num=0, flag=1)
         # print(text)
+        name = match_text(txt=text, txt_start='姓名:', txt_end_1='性别', txt_end_2='申请单号', num=0, flag=1)
+        gender = match_text(txt=text, txt_start='性别:', txt_end_1='', txt_end_2='', num=1, flag=0)
+        age = match_text(txt=text, txt_start='年龄:', txt_end_1='身份证号', txt_end_2='保险类型', num=0, flag=1)
+        idnum = match_text(txt=text, txt_start='身份证号', txt_end_1='', txt_end_2='', num=18, flag=0) + '\t'
+        tel = match_text(txt=text, txt_start='联系电话', txt_end_1='', txt_end_2='', num=11, flag=0) + '\t'
+        unit = match_text(txt=text, txt_start='科别:', txt_end_1='申请单号', txt_end_2='姓名', num=0, flag=1)
+        dr = match_text(txt=text, txt_start='申请医生:', txt_end_1='', txt_end_2='', num=3, flag=0)
         text = ""
         # 写入csv文件
         row = [name, gender, age, idnum, tel, unit, dr]
         out = open("./result.csv", "a", newline="")
         csv_writer = csv.writer(out, dialect="excel")
         csv_writer.writerow(row)
+        print('第' + str(count+1) + '/' + str(file_num+1) + '张图像识别完成')
     os.rmdir(zip_path)
+    print('全部图像已识别完成，请打开result.csv查看')
